@@ -3,6 +3,7 @@ package me.grantland.widget;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.text.Editable;
 import android.text.Layout;
@@ -19,6 +20,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A helper class to enable automatically resizing {@link TextView}`s {@code textSize} to fit
@@ -37,6 +40,8 @@ public class AutofitHelper {
     private static final int DEFAULT_MIN_TEXT_SIZE = 8; //sp
     // How precise we want to be when reaching the target textWidth size
     private static final float DEFAULT_PRECISION = 0.5f;
+
+    private static final Map<Info, Float> mCacheSizes = new HashMap<>();
 
     /**
      * Creates a new instance of {@code AutofitHelper} that wraps a {@link TextView} and enables
@@ -102,6 +107,15 @@ public class AutofitHelper {
             return;
         }
 
+        // Check in cache.
+        Info info = new Info(view.getText().length(), targetWidth, maxLines, view.getTypeface());
+        Float cacheSize = mCacheSizes.get(info);
+
+        if (cacheSize != null) {
+            view.setTextSize(TypedValue.COMPLEX_UNIT_PX, cacheSize);
+            return;
+        }
+
         CharSequence text = view.getText();
         TransformationMethod method = view.getTransformationMethod();
         if (method != null) {
@@ -133,6 +147,8 @@ public class AutofitHelper {
         if (size < minTextSize) {
             size = minTextSize;
         }
+
+        mCacheSizes.put(info, size);
 
         view.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
     }
@@ -556,6 +572,36 @@ public class AutofitHelper {
     public static class Adapter {
         public int getMaxWidthOfView(View view) {
             return view.getWidth() - view.getPaddingLeft() - view.getPaddingRight();
+        }
+    }
+
+    private static class Info {
+        final int length;
+        final int width;
+        final int line;
+        final Typeface typeface;
+
+        private Info(int length, int width, int line, Typeface typeface) {
+            this.length = length;
+            this.width = width;
+            this.line = line;
+            this.typeface = typeface;
+        }
+
+        @Override
+        public int hashCode() {
+            return (this.length + ":" + this.width + ":" + this.line + ":" + this.typeface.hashCode()).hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Info) {
+                Info info = (Info) o;
+
+                return this.length == info.length && this.width == info.width && this.line == info.line && this.typeface == info.typeface;
+            }
+
+            return super.equals(o);
         }
     }
 }
