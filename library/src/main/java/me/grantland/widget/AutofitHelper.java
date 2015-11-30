@@ -590,7 +590,7 @@ public class AutofitHelper {
 
         @Override
         public int hashCode() {
-            return (this.length + ":" + this.width + ":" + this.line + ":" + this.typeface.hashCode()).hashCode();
+            return (this.length + ":" + this.width + ":" + this.line + (this.typeface != null ? ":" + this.typeface.hashCode() : "")).hashCode();
         }
 
         @Override
