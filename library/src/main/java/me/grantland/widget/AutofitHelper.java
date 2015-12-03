@@ -35,6 +35,7 @@ public class AutofitHelper {
 
     private static final String TAG = "AutoFitTextHelper";
     private static final boolean SPEW = false;
+    private static final boolean CACHE_ENABLED = false;
 
     // Minimum size of the text in pixels
     private static final int DEFAULT_MIN_TEXT_SIZE = 8; //sp
@@ -108,12 +109,16 @@ public class AutofitHelper {
         }
 
         // Check in cache.
-        Info info = new Info(view.getText().length(), targetWidth, maxLines, view.getTypeface());
-        Float cacheSize = mCacheSizes.get(info);
+        Info info = null;
 
-        if (cacheSize != null) {
-            view.setTextSize(TypedValue.COMPLEX_UNIT_PX, cacheSize);
-            return;
+        if (CACHE_ENABLED) {
+            info = new Info(view.getText().length(), targetWidth, maxLines, view.getTypeface());
+            Float cacheSize = mCacheSizes.get(info);
+
+            if (cacheSize != null) {
+                view.setTextSize(TypedValue.COMPLEX_UNIT_PX, cacheSize);
+                return;
+            }
         }
 
         CharSequence text = view.getText();
@@ -148,7 +153,9 @@ public class AutofitHelper {
             size = minTextSize;
         }
 
-        mCacheSizes.put(info, size);
+        if (CACHE_ENABLED) {
+            mCacheSizes.put(info, size);
+        }
 
         view.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
     }
